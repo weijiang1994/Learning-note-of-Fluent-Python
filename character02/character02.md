@@ -10,7 +10,7 @@
 
 下图显示了可变序列`MutableSequence`和不可变序列`Sequence`的区别，同时也可以看出前者从后者哪里继承了一些方法。
 
-![可变与不可变序列](.\image\可变不可变序列.PNG)
+![可变与不可变序列](https://github.com/weijiang1994/Learning-note-of-Fluent-Python/blob/master/character02/image/%E5%8F%AF%E5%8F%98%E4%B8%8D%E5%8F%AF%E5%8F%98%E5%BA%8F%E5%88%97.PNG)
 
 ### 2.2 列表推导式
 
