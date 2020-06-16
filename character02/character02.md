@@ -368,3 +368,5 @@ if __name__ == '__main__':
 
 ![](.\image\bisect搜索.png)
 
+> `bisect` 函数其实是`bisect_right`函数的别名，`bisect_left`是他的姊妹函数。二者不同在于`bisect_left`返回的插入位置是原序列中跟被插入元素相等的元素的位置，**也就是新元素会被放置于与它相等的元素的前面**，而`bisect_right`返回的则是**跟它相等元素的之后的位置。**
+
