@@ -10,7 +10,7 @@
 
 下图显示了可变序列`MutableSequence`和不可变序列`Sequence`的区别，同时也可以看出前者从后者哪里继承了一些方法。
 
-![可变与不可变序列](https://github.com/weijiang1994/Learning-note-of-Fluent-Python/blob/master/character02/image/%E5%8F%AF%E5%8F%98%E4%B8%8D%E5%8F%AF%E5%8F%98%E5%BA%8F%E5%88%97.PNG)
+![可变与不可变序列](.\image\可变不可变序列.PNG)
 
 ### 2.2 列表推导式
 
@@ -205,7 +205,7 @@ print('切片赋值操作之后的序列:', l) # 切片赋值操作之后的序�
 
 > 需要注意的是，在给切片进行赋值操作的时候，等号右边必须是一个可迭代序列。
 
-#### +和*的注意事项
+### 2.7 +和*的注意事项
 
 > \+和\*都不会改变原有的操作对象，而是构建一个全新的序列。
 >
@@ -238,4 +238,133 @@ print(board) # [['_', '_', 'X'], ['_', '_', 'X'], ['_', '_', 'X']]
 ```
 
 **如果采用了*去生成，因为嵌套列表中的列表都指向一个列表，所以更改一个，全盘都更改了。**
+
+### 2.8 序列的增量赋值
+
+> 增量赋值运算符 `+=` `*=`取决于它们的第一个操作对象。
+
+* `+=`其背后的特殊方法是 `__iadd__`,如果一个类没有实现该方法，那么会自动去调用`__add__`方法
+* `*=`其背后的特殊方法是`__imul__`, 如果一个类没有实现该方法，那么会自动去调用`__mul__`方法
+* 一般来说可变序列都实现了`__iadd__`方法
+
+```python
+l = [1, 2, 3]
+print(id(l))  # 2199257719944
+
+l *= 2
+print(l)	  # [1, 2, 3, 1, 2, 3]
+print(id(l))  # 2199257719944
+
+
+t = (1, 2, 3)
+print(id(t))  # 2199257662376
+
+t *= 2	
+print(t) 	  # (1, 2, 3, 1, 2, 3)
+print(id(t))  # 2199255258984
+```
+
+**对于不可变序列进行重复的拼接操作，效率会很低，因为每次都有一个新对象，而解释器需要把原来对象中的元素先复制到新的对象里，然后再追加新的元素。因此两次的id不一致。**
+
+####  关于 += 的谜题
+
+```python
+t=(1, 2, [30, 40])
+t[2] += [50, 60]
+```
+
+<kbd>思考？</kbd>
+
+上述代码会出现哪种结果呢？
+
+a.t变成 `(1, 2, [30, 40, 50, 60])`
+
+b.因为tuple不支持对它的元素赋值，所以会抛出异常
+
+c.以上两个都不是
+
+d.a和b都对
+
+> 答案为d，两个都是对的？为什么抛出异常了，还会进行赋值呢？
+
+我们可以通过`dis`查看`s[a] += b`的字节码，如下图所示
+
+![查看s[a]+=b的字节码](.\image\s[a]+=b字节码查看.PNG)
+
+1. `BINARY_SUBSCR`将s[a]的值存入栈顶
+2. `INPLACE_ADD`执行加法操作，这一步可以完成，因为栈顶指向的是一个可变对象
+3. `STORE_SUBSCR`这一步无法执行，因为元组是不可变的
+
+<kbd>经验</kbd>
+
+* 不要把可变对象放在元组里面
+* 增量赋值不是一个原子操作，就如上面的代码虽然抛出了异常，但是还是完成了赋值操作
+* 查看Python的字节码并不难，而且它对我们了解代码背后的运行原理机制十分有帮助
+
+### 2.9 list.sort与sorted()
+
+> `sort()`函数就地对序列进行修改返回值为`None`
+>
+> `sorted()`函数会创建一个新的序列作为返回值，不管传入的是可变还是不可变的，都会以列表的形式进行返回，不会修改原序列
+
+我们在两个函数中都可以使用关键字`reverse`来表示升序或降序，当为`True`时候，会以降序进行结果输出。
+
+**在`reverse`函数中，还可以使用`key`关键字参数，该参数为只接受一个参数的函数。**
+
+```python
+fruits = ['grape', 'raspberry', 'apple', 'banana']
+print(sorted(fruits))  #1 ['apple', 'banana', 'grape', 'raspberry']
+print(fruits) #2 ['grape', 'raspberry', 'apple', 'banana']
+
+print(sorted(fruits, reverse=True)) #3 ['raspberry', 'grape', 'banana', 'apple']
+print(sorted(fruits, key=len)) #4 ['grape', 'apple', 'banana', 'raspberry']
+print(sorted(fruits, key=len, reverse=True)) 
+#5 ['raspberry', 'banana', 'grape', 'apple']
+fruits.sort()
+print(fruits) #6 ['apple', 'banana', 'grape', 'raspberry']
+```
+
+1. `sorted()`会直接返回一个新的列表，根据字母升序排列方式
+2. 由于采用的`sorted()`函数，原始序列不会发生改变
+3. 根据字母降序排列
+4. 根据长度进行升序排列
+5. 根据长度进行降序排列
+6. `sort()`函数会修改原始序列
+
+### 2.10 bisect使用
+
+> bisect模块主要包含有两个函数`bisect`和`insort`，两个函数都是利用二分查找算法在有序序列中查找或插入元素。
+
+#### 使用bisect来搜索
+
+```python
+import bisect
+import sys
+
+HAYSTACK = [1, 4, 5, 6, 8, 12, 15, 20, 21, 23, 23, 26, 29, 30]
+NEEDLES = [0, 1, 2, 5, 8, 10, 22, 23, 29, 30, 31]
+ROW_FMT = '{0:2d} @ {1:2d}  {2}{0:<2d}'
+
+
+def demo(bisect_fn):
+    for needle in reversed(NEEDLES):
+        position = bisect_fn(HAYSTACK, needle)  # 计算needle插入的位置
+        offset = position * '  |'
+        print(ROW_FMT.format(needle, position, offset))  # 按格式输出
+
+
+if __name__ == '__main__':
+    if sys.argv[-1] == 'left':
+        fn = bisect.bisect_left
+    else:
+        fn = bisect.bisect
+
+    print('DEMO:', fn.__name__)
+    print('haystack ->', ' '.join('%2d' % n for n in HAYSTACK))
+    demo(fn)
+```
+
+上述代码的输出结果如下图所示:
+
+![](.\image\bisect搜索.png)
 
